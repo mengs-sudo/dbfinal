@@ -9,7 +9,6 @@ class Receipt extends Model
     protected $fillable = [
         'receipt_number',
         'sales_order_id',
-        'payment_id',
         'receipt_date',
         'amount',
         'payment_method',
@@ -25,11 +24,6 @@ class Receipt extends Model
     public function salesOrder()
     {
         return $this->belongsTo(SalesOrder::class);
-    }
-
-    public function payment()
-    {
-        return $this->belongsTo(Payment::class);
     }
 
     public function createdBy()

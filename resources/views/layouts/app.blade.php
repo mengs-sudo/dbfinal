@@ -65,12 +65,12 @@
 
                 <a href="{{ route('payments.index') }}" class="nav-item {{ Request::routeIs('payments.*') ? 'active' : '' }}">
                     <i class="fas fa-credit-card"></i>
-                    Payments
+                    Purchase Payments
                 </a>
 
                 <a href="{{ route('receipts.index') }}" class="nav-item {{ Request::routeIs('receipts.*') ? 'active' : '' }}">
                     <i class="fas fa-receipt"></i>
-                    Receipts
+                    Sales Receipts
                 </a>
             </div>
 

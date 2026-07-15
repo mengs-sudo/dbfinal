@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Receipt Details - Inventory Management System')
-@section('page-title', 'Receipt Details')
+@section('page-title', 'Sales Receipt Details')
 
 @section('content')
     <div class="row g-4">
@@ -14,7 +14,7 @@
                         </div>
                     </div>
                     <h5 class="mb-1">{{ $receipt->receipt_number }}</h5>
-                    <span class="badge bg-success">Completed</span>
+                    <span class="badge bg-success"><i class="fas fa-arrow-up me-1"></i> Sales Receipt</span>
                     <div class="mt-3">
                         <a href="{{ route('receipts.index') }}" class="btn btn-sm btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back to List
@@ -56,6 +56,10 @@
                         <div class="col-md-6">
                             <label class="form-label text-secondary">Status</label>
                             <p><span class="badge bg-success">Completed</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary">Recorded By</label>
+                            <p class="fw-medium">{{ $receipt->createdBy->name ?? 'System' }}</p>
                         </div>
                     </div>
                 </div>

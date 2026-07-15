@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Payment Details - Inventory Management System')
-@section('page-title', 'Payment Details')
+@section('page-title', 'Purchase Payment Details')
 
 @section('content')
     <div class="row g-4">
@@ -14,7 +14,7 @@
                         </div>
                     </div>
                     <h5 class="mb-1">{{ $payment->payment_number }}</h5>
-                    <span id="typeBadge" class="badge bg-success">Completed</span>
+                    <span class="badge bg-danger"><i class="fas fa-arrow-down me-1"></i> Purchase Payment</span>
                     <div class="mt-3">
                         <a href="{{ route('payments.index') }}" class="btn btn-sm btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back to List
@@ -32,20 +32,14 @@
                 <div class="card-body">
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <label id="refLabel" class="form-label text-secondary">Reference</label>
-                            <p class="fw-medium" id="refValue">
-                                <span class="code-badge">
-                                    @if($payment->type == 'purchase')
-                                        {{ $payment->purchaseOrder->purchase_number ?? 'N/A' }}
-                                    @else
-                                        {{ $payment->salesOrder->sales_number ?? 'N/A' }}
-                                    @endif
-                                </span>
+                            <label class="form-label text-secondary">Purchase Order</label>
+                            <p class="fw-medium">
+                                <span class="code-badge">{{ $payment->purchaseOrder->purchase_number ?? 'N/A' }}</span>
                             </p>
                         </div>
                         <div class="col-md-6">
-                            <label id="entityLabel" class="form-label text-secondary">Entity</label>
-                            <p class="fw-medium" id="entityValue">{{ $payment->entity_name ?? 'N/A' }}</p>
+                            <label class="form-label text-secondary">Supplier</label>
+                            <p class="fw-medium">{{ $payment->entity_name ?? 'N/A' }}</p>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-secondary">Payment Date</label>

@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\PurchaseOrder;
-use App\Models\SalesOrder;
 use App\Models\Supplier;
-use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -16,7 +14,8 @@ class PaymentController extends Controller
     {
         $search = $request->get('search');
 
-        $payments = Payment::with('purchaseOrder.supplier', 'salesOrder.customer', 'createdBy')
+        $payments = Payment::with('purchaseOrder.supplier', 'createdBy')
+            ->where('type', 'purchase')
             ->when($search, function ($query, $search) {
                 return $query->where('payment_number', 'like', '%' . $search . '%')
                     ->orWhere('entity_name', 'like', '%' . $search . '%')
@@ -24,12 +23,6 @@ class PaymentController extends Controller
                         $q->where('purchase_number', 'like', '%' . $search . '%')
                             ->orWhereHas('supplier', function ($sq) use ($search) {
                                 $sq->where('supplier_name', 'like', '%' . $search . '%');
-                            });
-                    })
-                    ->orWhereHas('salesOrder', function ($q) use ($search) {
-                        $q->where('sales_number', 'like', '%' . $search . '%')
-                            ->orWhereHas('customer', function ($sq) use ($search) {
-                                $sq->where('customer_name', 'like', '%' . $search . '%');
                             });
                     });
             })
@@ -46,22 +39,15 @@ class PaymentController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $salesOrders = SalesOrder::with('customer')
-            ->where('status', '!=', 'paid')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
         $paymentNumber = Payment::generateCode();
 
-        return view('payments.create', compact('purchaseOrders', 'salesOrders', 'paymentNumber'));
+        return view('payments.create', compact('purchaseOrders', 'paymentNumber'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'type' => 'required|string|in:purchase,sales',
-            'purchase_order_id' => 'required_if:type,purchase|exists:purchase_orders,id',
-            'sales_order_id' => 'required_if:type,sales|exists:sales_orders,id',
+            'purchase_order_id' => 'required|exists:purchase_orders,id',
             'payment_date' => 'required|date',
             'amount' => 'required|numeric|min:0',
             'payment_method' => 'required|string|in:cash,check,bank_transfer,credit_card',
@@ -70,94 +56,44 @@ class PaymentController extends Controller
         DB::beginTransaction();
 
         try {
-            $entityName = '';
-
-            if ($validated['type'] === 'purchase') {
                 $purchaseOrder = PurchaseOrder::findOrFail($validated['purchase_order_id']);
 
-                $paidSoFar = $purchaseOrder->payments()->sum('amount');
-                $remaining = $purchaseOrder->total_amount - $paidSoFar;
+            $paidSoFar = $purchaseOrder->payments()->sum('amount');
+            $remaining = $purchaseOrder->total_amount - $paidSoFar;
 
-                if ($validated['amount'] > $remaining) {
-                    throw new \Exception("Payment amount exceeds remaining balance of " . number_format($remaining, 2));
-                }
+            if ($validated['amount'] > $remaining) {
+                throw new \Exception("Payment amount exceeds remaining balance of " . number_format($remaining, 2));
+            }
 
                 $entityName = $purchaseOrder->supplier->supplier_name ?? 'Supplier';
 
-                $payment = Payment::create([
-                    'payment_number' => Payment::generateCode(),
-                    'type' => 'purchase',
-                    'entity_name' => $entityName,
-                    'purchase_order_id' => $validated['purchase_order_id'],
-                    'payment_date' => $validated['payment_date'],
-                    'amount' => $validated['amount'],
-                    'payment_method' => $validated['payment_method'],
-                    'status' => 'completed',
-                    'created_by' => auth()->id(),
-                ]);
+            $payment = Payment::create([
+                'payment_number' => Payment::generateCode(),
+                'type' => 'purchase',
+                'entity_name' => $entityName,
+                'purchase_order_id' => $validated['purchase_order_id'],
+                'payment_date' => $validated['payment_date'],
+                'amount' => $validated['amount'],
+                'payment_method' => $validated['payment_method'],
+                'status' => 'completed',
+                'created_by' => auth()->id(),
+            ]);
 
-                // Update purchase order paid amount
-                $newPaidAmount = $paidSoFar + $validated['amount'];
-                $purchaseOrder->update([
-                    'paid_amount' => $newPaidAmount,
-                    'status' => $newPaidAmount >= $purchaseOrder->total_amount ? 'paid' : 'partial',
-                ]);
+            // Update purchase order paid amount
+            $newPaidAmount = $paidSoFar + $validated['amount'];
+            $purchaseOrder->update([
+                'paid_amount' => $newPaidAmount,
+                'status' => $newPaidAmount >= $purchaseOrder->total_amount ? 'paid' : 'partial',
+            ]);
 
-                // Update supplier balance
-                $supplier = Supplier::find($purchaseOrder->supplier_id);
-                $supplier->decrement('balance', $validated['amount']);
-
-            } else { // type === 'sales'
-                $salesOrder = SalesOrder::findOrFail($validated['sales_order_id']);
-
-                $receivedSoFar = $salesOrder->receipts()->sum('amount');
-                $remaining = $salesOrder->total_amount - $receivedSoFar;
-
-                if ($validated['amount'] > $remaining) {
-                    throw new \Exception("Payment amount exceeds remaining balance of " . number_format($remaining, 2));
-                }
-
-                $entityName = $salesOrder->customer->customer_name ?? 'Customer';
-
-                $payment = Payment::create([
-                    'payment_number' => Payment::generateCode(),
-                    'type' => 'sales',
-                    'entity_name' => $entityName,
-                    'sales_order_id' => $validated['sales_order_id'],
-                    'payment_date' => $validated['payment_date'],
-                    'amount' => $validated['amount'],
-                    'payment_method' => $validated['payment_method'],
-                    'status' => 'completed',
-                    'created_by' => auth()->id(),
-                ]);
-
-                // Update sales order paid amount (via receipts table)
-                $salesOrder->receipts()->create([
-                    'receipt_number' => 'REC' . str_pad(($salesOrder->receipts()->count() + 1), 3, '0', STR_PAD_LEFT),
-                    'payment_id' => $payment->id,
-                    'receipt_date' => $validated['payment_date'],
-                    'amount' => $validated['amount'],
-                    'payment_method' => $validated['payment_method'],
-                    'status' => 'completed',
-                    'created_by' => auth()->id(),
-                ]);
-
-                // Update sales order paid amount
-                $newPaidAmount = $receivedSoFar + $validated['amount'];
-                $salesOrder->update([
-                    'paid_amount' => $newPaidAmount,
-                    'status' => $newPaidAmount >= $salesOrder->total_amount ? 'paid' : 'partial',
-                ]);
-
-                // Update customer balance
-                $customer = Customer::find($salesOrder->customer_id);
-                $customer->decrement('balance', $validated['amount']);
-            }
+            // Update supplier balance
+            $supplier = Supplier::find($purchaseOrder->supplier_id);
+            $supplier->decrement('balance', $validated['amount']);
 
             DB::commit();
 
             return redirect()->route('payments.index')
-                ->with('success', 'Payment recorded successfully.');
+                ->with('success', 'Purchase payment recorded successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
@@ -168,7 +104,7 @@ class PaymentController extends Controller
 
     public function show(Payment $payment)
     {
-        $payment->load('purchaseOrder.supplier', 'salesOrder.customer', 'createdBy');
+        $payment->load('purchaseOrder.supplier', 'createdBy');
         return view('payments.show', compact('payment'));
     }
 
@@ -187,38 +123,18 @@ class PaymentController extends Controller
         DB::beginTransaction();
 
         try {
-            if ($payment->type === 'purchase') {
-                $purchaseOrder = $payment->purchaseOrder;
-                $supplier = $purchaseOrder->supplier;
+            $purchaseOrder = $payment->purchaseOrder;
+            $supplier = $purchaseOrder->supplier;
 
-                if ($supplier) {
-                    $supplier->increment('balance', $payment->amount);
-                }
-
-                $newPaidAmount = $purchaseOrder->paid_amount - $payment->amount;
-                $purchaseOrder->update([
-                    'paid_amount' => max(0, $newPaidAmount),
-                    'status' => $newPaidAmount <= 0 ? 'pending' : 'partial',
-                ]);
-            } else {
-                $salesOrder = $payment->salesOrder;
-                $customer = $salesOrder?->customer;
-
-                // Also delete the related receipt
-                $payment->receipt()?->delete();
-
-                if ($customer) {
-                    $customer->increment('balance', $payment->amount);
-                }
-
-                if ($salesOrder) {
-                    $newPaidAmount = $salesOrder->paid_amount - $payment->amount;
-                    $salesOrder->update([
-                        'paid_amount' => max(0, $newPaidAmount),
-                        'status' => $newPaidAmount <= 0 ? 'pending' : 'partial',
-                    ]);
-                }
+            if ($supplier) {
+                $supplier->increment('balance', $payment->amount);
             }
+
+            $newPaidAmount = $purchaseOrder->paid_amount - $payment->amount;
+            $purchaseOrder->update([
+                'paid_amount' => max(0, $newPaidAmount),
+                'status' => $newPaidAmount <= 0 ? 'pending' : 'partial',
+            ]);
 
             $payment->delete();
 
@@ -245,17 +161,5 @@ class PaymentController extends Controller
             'remaining' => $remaining,
         ]);
     }
-
-    public function getSalesOrder($id)
-    {
-        $salesOrder = SalesOrder::with('customer')->findOrFail($id);
-        $receivedAmount = $salesOrder->receipts()->sum('amount');
-        $remaining = $salesOrder->total_amount - $receivedAmount;
-
-        return response()->json([
-            'sales_order' => $salesOrder,
-            'received_amount' => $receivedAmount,
-            'remaining' => $remaining,
-        ]);
-    }
 }
+

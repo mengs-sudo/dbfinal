@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Payments - Inventory Management System')
-@section('page-title', 'Payments')
+@section('title', 'Purchase Payments - Inventory Management System')
+@section('page-title', 'Purchase Payments')
 
 @section('content')
     <div class="table-container">
         <div class="table-header">
-            <h6 class="table-title"><i class="fas fa-credit-card me-2 text-primary"></i>Payments</h6>
+            <h6 class="table-title"><i class="fas fa-credit-card me-2 text-primary"></i>Purchase Payments</h6>
             <div class="table-toolbar">
                 <form action="{{ route('payments.index') }}" method="GET" class="d-flex gap-2">
                     <div class="search-box">
@@ -29,9 +29,8 @@
                 <thead>
                     <tr>
                         <th>Payment #</th>
-                        <th>Type</th>
-                        <th>Reference</th>
-                        <th>Entity</th>
+                        <th>Purchase Order</th>
+                        <th>Supplier</th>
                         <th>Date</th>
                         <th>Amount</th>
                         <th>Method</th>
@@ -44,20 +43,7 @@
                     @forelse($payments as $payment)
                         <tr>
                             <td><span class="code-badge">{{ $payment->payment_number }}</span></td>
-                            <td>
-                                @if($payment->type == 'purchase')
-                                    <span class="badge bg-danger"><i class="fas fa-arrow-down me-1"></i> Pay Out</span>
-                                @else
-                                    <span class="badge bg-success"><i class="fas fa-arrow-up me-1"></i> Receive</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($payment->type == 'purchase')
-                                    {{ $payment->purchaseOrder->purchase_number ?? 'N/A' }}
-                                @else
-                                    {{ $payment->salesOrder->sales_number ?? 'N/A' }}
-                                @endif
-                            </td>
+                            <td>{{ $payment->purchaseOrder->purchase_number ?? 'N/A' }}</td>
                             <td>{{ $payment->entity_name ?? 'N/A' }}</td>
                             <td>{{ $payment->payment_date->format('d M Y') }}</td>
                             <td>${{ number_format($payment->amount, 2) }}</td>
@@ -86,11 +72,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10">
+                            <td colspan="9">
                                 <div class="empty-state">
                                     <i class="fas fa-credit-card"></i>
                                     <h6>No Payments Found</h6>
-                                    <p>Get started by recording your first payment.</p>
+                                    <p>Get started by recording your first purchase payment.</p>
                                     <a href="{{ route('payments.create') }}" class="btn btn-primary">
                                         <i class="fas fa-plus"></i> New Payment
                                     </a>

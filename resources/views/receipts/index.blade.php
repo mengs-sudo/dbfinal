@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Receipts - Inventory Management System')
-@section('page-title', 'Receipts')
+@section('title', 'Sales Receipts - Inventory Management System')
+@section('page-title', 'Sales Receipts')
 
 @section('content')
     <div class="table-container">
         <div class="table-header">
-            <h6 class="table-title"><i class="fas fa-receipt me-2 text-primary"></i>Receipts</h6>
+            <h6 class="table-title"><i class="fas fa-receipt me-2 text-primary"></i>Sales Receipts</h6>
             <div class="table-toolbar">
                 <form action="{{ route('receipts.index') }}" method="GET" class="d-flex gap-2">
                     <div class="search-box">
@@ -76,7 +76,7 @@
                                 <div class="empty-state">
                                     <i class="fas fa-receipt"></i>
                                     <h6>No Receipts Found</h6>
-                                    <p>Get started by recording your first receipt.</p>
+                                    <p>Get started by recording your first sales receipt.</p>
                                     <a href="{{ route('receipts.create') }}" class="btn btn-primary">
                                         <i class="fas fa-plus"></i> New Receipt
                                     </a>

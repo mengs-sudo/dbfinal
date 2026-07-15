@@ -39,7 +39,7 @@ Route::middleware('auth')->group(function () {
 
     // Custom routes for AJAX requests
     Route::get('/payments/purchase-order/{id}', [PaymentController::class, 'getPurchaseOrder'])->name('payments.purchase-order');
-    Route::get('/payments/sales-order/{id}', [PaymentController::class, 'getSalesOrder'])->name('payments.sales-order');
     Route::get('/receipts/sales-order/{id}', [ReceiptController::class, 'getSalesOrder'])->name('receipts.sales-order');
     Route::get('/inventory/item/{id}', [InventoryController::class, 'getItem'])->name('inventory.item');
 });
+

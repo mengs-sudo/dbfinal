@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
 @section('title', 'Create Receipt - Inventory Management System')
-@section('page-title', 'Create Receipt')
+@section('page-title', 'Create Sales Receipt')
 
 @section('content')
     <div class="card">
         <div class="card-header">
-            <i class="fas fa-plus-circle me-2 text-primary"></i>New Receipt
+            <i class="fas fa-plus-circle me-2 text-primary"></i>New Sales Receipt
         </div>
         <div class="card-body">
             <form action="{{ route('receipts.store') }}" method="POST" id="receiptForm">

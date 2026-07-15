@@ -11,7 +11,6 @@ class Payment extends Model
         'type',
         'entity_name',
         'purchase_order_id',
-        'sales_order_id',
         'payment_date',
         'amount',
         'payment_method',
@@ -27,16 +26,6 @@ class Payment extends Model
     public function purchaseOrder()
     {
         return $this->belongsTo(PurchaseOrder::class);
-    }
-
-    public function salesOrder()
-    {
-        return $this->belongsTo(SalesOrder::class);
-    }
-
-    public function receipt()
-    {
-        return $this->hasOne(Receipt::class, 'payment_id');
     }
 
     public function createdBy()

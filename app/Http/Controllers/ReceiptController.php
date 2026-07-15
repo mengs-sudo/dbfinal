@@ -14,7 +14,7 @@ class ReceiptController extends Controller
     {
         $search = $request->get('search');
 
-        $receipts = Receipt::with('salesOrder.customer')
+        $receipts = Receipt::with('salesOrder.customer', 'createdBy')
             ->when($search, function ($query, $search) {
                 return $query->where('receipt_number', 'like', '%' . $search . '%')
                     ->orWhereHas('salesOrder', function ($q) use ($search) {
@@ -87,7 +87,7 @@ class ReceiptController extends Controller
             DB::commit();
 
             return redirect()->route('receipts.index')
-                ->with('success', 'Receipt recorded successfully.');
+                ->with('success', 'Sales receipt recorded successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
@@ -98,7 +98,7 @@ class ReceiptController extends Controller
 
     public function show(Receipt $receipt)
     {
-        $receipt->load('salesOrder.customer');
+        $receipt->load('salesOrder.customer', 'createdBy');
         return view('receipts.show', compact('receipt'));
     }
 
