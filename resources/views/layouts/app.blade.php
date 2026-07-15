@@ -7,7 +7,10 @@
     <title>@yield('title', 'Inventory Management System')</title>
 
     {{-- Vite Assets --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @php($viteManifest = public_path('build/manifest.json'))
+    @if (file_exists($viteManifest))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @endif
 
     {{-- Additional Styles --}}
     @stack('styles')
