@@ -1,0 +1,45 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\SalesController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ReceiptController;
+
+// Guest routes
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+});
+
+// Authenticated routes
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    Route::get('/', function () {
+        return redirect()->route('dashboard');
+    });
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::resource('suppliers', SupplierController::class);
+    Route::resource('customers', CustomerController::class);
+    Route::resource('inventory', InventoryController::class);
+    Route::resource('purchases', PurchaseController::class);
+    Route::resource('sales', SalesController::class);
+    Route::resource('payments', PaymentController::class);
+    Route::resource('receipts', ReceiptController::class);
+
+    // Custom routes for AJAX requests
+    Route::get('/payments/purchase-order/{id}', [PaymentController::class, 'getPurchaseOrder'])->name('payments.purchase-order');
+    Route::get('/payments/sales-order/{id}', [PaymentController::class, 'getSalesOrder'])->name('payments.sales-order');
+    Route::get('/receipts/sales-order/{id}', [ReceiptController::class, 'getSalesOrder'])->name('receipts.sales-order');
+    Route::get('/inventory/item/{id}', [InventoryController::class, 'getItem'])->name('inventory.item');
+});
