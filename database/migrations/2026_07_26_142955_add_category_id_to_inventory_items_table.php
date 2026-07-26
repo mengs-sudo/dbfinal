@@ -9,14 +9,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. Add the new nullable FK column next to the old text 'category' column.
-        Schema::table('inventory_items', function (Blueprint $table) {
-            $table->foreignId('category_id')->nullable()->after('category')
-                ->constrained('categories')->nullOnDelete();
-        });
+        $schemaBuilder = Schema::getFacadeRoot();
 
-        // 2. Backfill: turn every distinct existing free-text category value into a
-        //    real Category row, then point each inventory item at it.
+        // ADD category_id only if it doesn't already exist
+        if (!$schemaBuilder->hasColumn('inventory_items', 'category_id')) {
+            Schema::table('inventory_items', function (Blueprint $table) {
+                $table->foreignId('category_id')->nullable()->after('category')
+                    ->constrained('categories')->nullOnDelete();
+            });
+        }
+
+        // Backfill: turn every distinct existing free-text category value into a
+        // real Category row, then point each inventory item at it.
         $distinctCategories = DB::table('inventory_items')
             ->whereNotNull('category')
             ->where('category', '!=', '')
@@ -39,10 +43,12 @@ return new class extends Migration
                 ->update(['category_id' => $categoryId]);
         }
 
-        // 3. The old free-text column is now redundant, drop it.
-        Schema::table('inventory_items', function (Blueprint $table) {
-            $table->dropColumn('category');
-        });
+        // DROP the old free-text column if it still exists
+        if ($schemaBuilder->hasColumn('inventory_items', 'category')) {
+            Schema::table('inventory_items', function (Blueprint $table) {
+                $table->dropColumn('category');
+            });
+        }
     }
 
     public function down(): void
