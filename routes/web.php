@@ -10,6 +10,7 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\StockController;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -41,5 +42,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/payments/purchase-order/{id}', [PaymentController::class, 'getPurchaseOrder'])->name('payments.purchase-order');
     Route::get('/receipts/sales-order/{id}', [ReceiptController::class, 'getSalesOrder'])->name('receipts.sales-order');
     Route::get('/inventory/item/{id}', [InventoryController::class, 'getItem'])->name('inventory.item');
+
+    // Stock pages
+    Route::get('/stock/in', [StockController::class, 'stockIn'])->name('stock.in');
+    Route::get('/stock/out', [StockController::class, 'stockOut'])->name('stock.out');
+    Route::get('/stock/low-stock', [StockController::class, 'lowStock'])->name('stock.low-stock');
 });
 
