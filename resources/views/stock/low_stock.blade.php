@@ -103,7 +103,7 @@
                         <tr>
                             <td><span class="code-badge">{{ $item->item_code }}</span></td>
                             <td>{{ $item->item_name }}</td>
-                            <td>{{ $item->category ?? 'N/A' }}</td>
+                            <td>{{ $item->category->name ?? 'N/A' }}</td>
                             <td>
                                 <span style="font-weight: 600; color: {{ $isOutOfStock ? 'var(--danger)' : 'var(--warning)' }};">
                                     {{ $item->quantity }}

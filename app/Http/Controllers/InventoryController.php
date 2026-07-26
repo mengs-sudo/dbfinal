@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\InventoryItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -12,15 +13,20 @@ class InventoryController extends Controller
     {
         $search = $request->get('search');
 
-        $items = InventoryItem::when($search, function ($query, $search) {
-            return $query->where('item_code', 'like', '%' . $search . '%')
-                ->orWhere('item_name', 'like', '%' . $search . '%')
-                ->orWhere('category', 'like', '%' . $search . '%');
-        })
-        ->orderBy('created_at', 'desc')
-        ->paginate(10);
+        $items = InventoryItem::with(['category', 'variants'])
+            ->when($search, function ($query, $search) {
+                return $query->where('item_code', 'like', '%' . $search . '%')
+                    ->orWhere('item_name', 'like', '%' . $search . '%')
+                    ->orWhereHas('category', function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%');
+                    });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
-        return view('inventory.index', compact('items', 'search'));
+        $categories = Category::orderBy('name')->get();
+
+        return view('inventory.index', compact('items', 'search', 'categories'));
     }
 
     public function create()
@@ -32,7 +38,7 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'item_name' => 'required|string|max:100',
-            'category' => 'nullable|string|max:50',
+            'category_id' => 'nullable|exists:categories,id',
             'quantity' => 'required|integer|min:0',
             'unit_cost' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
@@ -54,6 +60,8 @@ class InventoryController extends Controller
 
     public function show(InventoryItem $inventory)
     {
+        $inventory->load(['category', 'variants']);
+
         return view('inventory.show', compact('inventory'));
     }
 
@@ -70,7 +78,7 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'item_name' => 'required|string|max:100',
-            'category' => 'nullable|string|max:50',
+            'category_id' => 'nullable|exists:categories,id',
             'quantity' => 'required|integer|min:0',
             'unit_cost' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
@@ -79,7 +87,6 @@ class InventoryController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            // Delete old image if exists
             if ($inventory->image) {
                 Storage::disk('public')->delete($inventory->image);
             }

@@ -52,8 +52,15 @@
                                 @endif
                             </td>
                             <td><span class="code-badge">{{ $item->item_code }}</span></td>
-                            <td>{{ $item->item_name }}</td>
-                            <td>{{ $item->category ?? 'N/A' }}</td>
+                            <td>
+                                {{ $item->item_name }}
+                                @if($item->variants->isNotEmpty())
+                                    <a href="{{ route('inventory.show', $item) }}" class="badge bg-secondary text-decoration-none ms-1" title="Has variants">
+                                        {{ $item->variants->count() }} {{ Str::plural('variant', $item->variants->count()) }}
+                                    </a>
+                                @endif
+                            </td>
+                            <td>{{ $item->category->name ?? 'N/A' }}</td>
                             <td class="{{ $item->isLowStock() ? 'low-stock' : '' }}">
                                 {{ $item->quantity }}
                                 @if($item->isLowStock())
@@ -133,10 +140,18 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Category</label>
-                                <input type="text" name="category" class="form-control @error('category') is-invalid @enderror" value="{{ old('category') }}">
-                                @error('category')
+                                <select name="category_id" class="form-select @error('category_id') is-invalid @enderror">
+                                    <option value="">-- None --</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->id }}" {{ (string) old('category_id') === (string) $category->id ? 'selected' : '' }}>
+                                            {{ $category->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('category_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <small class="text-secondary">Don't see the right category? <a href="{{ route('categories.index') }}">Manage categories</a>.</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Quantity <span class="text-danger">*</span></label>
@@ -212,7 +227,12 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Category</label>
-                                <input type="text" name="category" id="edit_category" class="form-control">
+                                <select name="category_id" id="edit_category_id" class="form-select">
+                                    <option value="">-- None --</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Quantity <span class="text-danger">*</span></label>
@@ -292,7 +312,7 @@
             .then(data => {
                 document.getElementById('edit_item_code').value = data.item_code;
                 document.getElementById('edit_item_name').value = data.item_name;
-                document.getElementById('edit_category').value = data.category || '';
+                document.getElementById('edit_category_id').value = data.category_id || '';
                 document.getElementById('edit_quantity').value = data.quantity;
                 document.getElementById('edit_unit_cost').value = data.unit_cost;
                 document.getElementById('edit_selling_price').value = data.selling_price;

@@ -212,7 +212,7 @@
                                 <tr>
                                     <td><span class="code-badge">{{ $item->item_code }}</span></td>
                                     <td>{{ $item->item_name }}</td>
-                                    <td>{{ $item->category ?? 'N/A' }}</td>
+                                    <td>{{ $item->category->name ?? 'N/A' }}</td>
                                     <td class="low-stock">{{ $item->quantity }}</td>
                                     <td>{{ $item->reorder_level }}</td>
                                     <td>

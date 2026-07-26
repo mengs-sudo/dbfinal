@@ -105,7 +105,7 @@
                             </td>
                             <td><span class="code-badge">{{ $item->inventoryItem->item_code ?? 'N/A' }}</span></td>
                             <td>{{ $item->inventoryItem->item_name ?? 'N/A' }}</td>
-                            <td>{{ $item->inventoryItem->category ?? 'N/A' }}</td>
+                            <td>{{ $item->inventoryItem->category->name ?? 'N/A' }}</td>
                             <td>
                                 <span class="badge bg-danger" style="font-size: 13px; font-weight: 500; padding: 4px 10px; border-radius: 6px;">
                                     -{{ $item->quantity }}

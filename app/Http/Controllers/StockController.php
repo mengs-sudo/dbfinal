@@ -14,7 +14,7 @@ class StockController extends Controller
     {
         $search = $request->get('search');
 
-        $stockIns = PurchaseItem::with(['purchaseOrder.supplier', 'purchaseOrder.createdBy', 'inventoryItem'])
+        $stockIns = PurchaseItem::with(['purchaseOrder.supplier', 'purchaseOrder.createdBy', 'inventoryItem.category'])
             ->when($search, function ($query, $search) {
                 return $query->whereHas('inventoryItem', function ($q) use ($search) {
                     $q->where('item_name', 'like', '%' . $search . '%')
@@ -43,7 +43,7 @@ class StockController extends Controller
     {
         $search = $request->get('search');
 
-        $stockOuts = SalesItem::with(['salesOrder.customer', 'salesOrder.createdBy', 'inventoryItem'])
+        $stockOuts = SalesItem::with(['salesOrder.customer', 'salesOrder.createdBy', 'inventoryItem.category'])
             ->when($search, function ($query, $search) {
                 return $query->whereHas('inventoryItem', function ($q) use ($search) {
                     $q->where('item_name', 'like', '%' . $search . '%')
@@ -72,10 +72,13 @@ class StockController extends Controller
     {
         $search = $request->get('search');
 
-        $items = InventoryItem::when($search, function ($query, $search) {
+        $items = InventoryItem::with('category')
+            ->when($search, function ($query, $search) {
                 return $query->where('item_name', 'like', '%' . $search . '%')
-                             ->orWhere('item_code', 'like', '%' . $search . '%')
-                             ->orWhere('category', 'like', '%' . $search . '%');
+                            ->orWhere('item_code', 'like', '%' . $search . '%')
+                            ->orWhereHas('category', function ($q) use ($search) {
+                                $q->where('name', 'like', '%' . $search . '%');
+                            });
             })
             ->whereColumn('quantity', '<=', 'reorder_level')
             ->orderBy('quantity', 'asc')

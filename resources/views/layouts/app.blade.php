@@ -6,11 +6,16 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Inventory Management System')</title>
 
-    {{-- Vite Assets --}}
-    @php($viteManifest = public_path('build/manifest.json'))
-    @if (file_exists($viteManifest))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
+    {{-- 1. Bootstrap 5 CSS --}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    {{-- 2. FontAwesome Icons CDN (for fa-cubes, fa-th-large, etc.) --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    {{-- 3. Custom Stylesheet (loads styles from public/css/app.css) --}}
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 
     {{-- Additional Styles --}}
     @stack('styles')
@@ -42,6 +47,11 @@
                 <a href="{{ route('inventory.index') }}" class="nav-item {{ Request::routeIs('inventory.*') ? 'active' : '' }}">
                     <i class="fas fa-boxes"></i>
                     Inventory
+                </a>
+
+                <a href="{{ route('categories.index') }}" class="nav-item {{ Request::routeIs('categories.*') ? 'active' : '' }}">
+                    <i class="fas fa-tags"></i>
+                    Categories
                 </a>
 
                 <a href="{{ route('stock.in') }}" class="nav-item {{ Request::routeIs('stock.in') ? 'active' : '' }}">
@@ -89,6 +99,13 @@
                 <a href="{{ route('receipts.index') }}" class="nav-item {{ Request::routeIs('receipts.*') ? 'active' : '' }}">
                     <i class="fas fa-receipt"></i>
                     Sales Receipts
+                </a>
+
+                <div class="nav-label">Reports</div>
+
+                <a href="{{ route('reports.valuation') }}" class="nav-item {{ Request::routeIs('reports.valuation') ? 'active' : '' }}">
+                    <i class="fas fa-chart-pie"></i>
+                    Inventory Valuation
                 </a>
             </div>
 

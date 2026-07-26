@@ -18,7 +18,8 @@ class DashboardController extends Controller
         $totalPurchases = PurchaseOrder::count();
         $totalSales = SalesOrder::count();
 
-        $lowStockItems = InventoryItem::whereColumn('quantity', '<=', 'reorder_level')
+        $lowStockItems = InventoryItem::with('category')
+            ->whereColumn('quantity', '<=', 'reorder_level')
             ->orderBy('quantity', 'asc')
             ->get();
 
