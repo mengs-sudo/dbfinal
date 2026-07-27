@@ -54,16 +54,6 @@
                     Categories
                 </a>
 
-                <a href="{{ route('stock.in') }}" class="nav-item {{ Request::routeIs('stock.in') ? 'active' : '' }}">
-                    <i class="fas fa-arrow-circle-down"></i>
-                    Stock In
-                </a>
-
-                <a href="{{ route('stock.out') }}" class="nav-item {{ Request::routeIs('stock.out') ? 'active' : '' }}">
-                    <i class="fas fa-arrow-circle-up"></i>
-                    Stock Out
-                </a>
-
                 <a href="{{ route('stock.low-stock') }}" class="nav-item {{ Request::routeIs('stock.low-stock') ? 'active' : '' }}">
                     <i class="fas fa-exclamation-triangle"></i>
                     Low Stock Alerts

@@ -49,13 +49,48 @@ class ReportController extends Controller
 
         $categories = Category::orderBy('name')->get();
 
+        // Dataset for the donut chart + its legend: every category's share
+        // of the grand total valuation, expressed as both a dollar amount
+        // and a percentage (e.g. "Electronics $8,750.00 (47.4%)").
+        // Uncategorized items are folded in as their own slice so the chart
+        // always accounts for 100% of on-hand value.
+        $chartRows = $valuationByCategory->map(function ($row) {
+            return [
+                'label' => $row->category_name,
+                'value' => (float) $row->total_value,
+            ];
+        });
+
+        if ($uncategorizedValue->total_value > 0) {
+            $chartRows->push([
+                'label' => 'Uncategorized',
+                'value' => (float) $uncategorizedValue->total_value,
+            ]);
+        }
+
+        $grandTotal = (float) $totals->total_valuation;
+
+        $categoryChart = $chartRows->map(function ($row) use ($grandTotal) {
+            $row['percentage'] = $grandTotal > 0
+                ? round(($row['value'] / $grandTotal) * 100, 1)
+                : 0;
+
+            return $row;
+        })->values();
+
+        // Number of distinct valuation "slices" (categories + the
+        // uncategorized bucket, if any) shown in the summary card.
+        $totalCategories = $categoryChart->count();
+
         return view('reports.valuation', compact(
             'items',
             'totals',
             'valuationByCategory',
             'uncategorizedValue',
             'categories',
-            'categoryId'
+            'categoryId',
+            'categoryChart',
+            'totalCategories'
         ));
     }
 }
