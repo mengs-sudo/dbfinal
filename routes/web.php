@@ -49,8 +49,6 @@ Route::middleware('auth')->group(function () {
     Route::put('/inventory/{inventory}/variants/{variant}', [ProductVariantController::class, 'update'])->name('variants.update');
     Route::delete('/inventory/{inventory}/variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variants.destroy');
 
-    Route::get('/stock/in', [StockController::class, 'stockIn'])->name('stock.in');
-    Route::get('/stock/out', [StockController::class, 'stockOut'])->name('stock.out');
     Route::get('/stock/low-stock', [StockController::class, 'lowStock'])->name('stock.low-stock');
 
     Route::get('/reports/valuation', [ReportController::class, 'valuation'])->name('reports.valuation');
